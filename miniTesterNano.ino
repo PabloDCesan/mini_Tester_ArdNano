@@ -4,9 +4,9 @@
   /--------------------oOOo-(_)-oOOo---------------------\
   |                                                      |
   |                                                      |
-  |      Transistor Tester for Arduino (version 1)       |
-  |  based on code: Karl-Heinz Kubbeler (version 1.08k)  |
-  |                Modified by PDCesan                   |
+  |                 Tester Arduino Nano                  |
+  |        basado en Arduproject de Markus Frejek        |
+  |                Modificado por PDCesan                |
   |                                                      |
   |                            Oooo                      |
   \--------------------oooO----(   )---------------------/
@@ -28,10 +28,6 @@
 #include <stdint.h>
 #include <avr/power.h>
 
-//#define LCD1602
-//#define LCD_I2C
-//#define NOK5110
-//#define OLED096
 #define OLED_I2C
 
 #ifdef LCD_I2C
@@ -55,11 +51,6 @@
   #endif
 #endif
 
-#ifdef NOK5110
-  #include <SPI.h>
-  #include <Adafruit_GFX.h>
-  #include <Adafruit_PCD8544.h>
-#endif
 
 #ifdef OLED096
   #include <SPI.h>
@@ -69,168 +60,133 @@
 #endif
 
 
-// ******** config options for your Semiconductor tester
-
-// Every changing of this Makefile will result in new compiling the whole
-// programs, if you call make or make upload.
-
+// ******** opciones de configuración
 #define MCU atmega328p
 #define F_CPU 16000000UL
 
-// Select your language:
-// Available languages are: LANG_ENGLISH, LANG_GERMAN, LANG_POLISH, LANG_CZECH, LANG_SLOVAK, LANG_SLOVENE,
-//                          LANG_DUTCH, LANG_BRASIL, LANG_RUSSIAN, LANG_UKRAINIAN
-#define LANG_ENGLISH
+// Selecciona tu idioma: LANG_ENGLISH, LANG_GERMAN, LANG_POLISH, LANG_CZECH, LANG_SLOVAK, LANG_SLOVENE,
+//  LANG_DUTCH, LANG_BRASIL, LANG_RUSSIAN, LANG_UKRAINIAN. Agregando LANG_SPANISH
+#define LANG_SPANISH
 
-// The LCD_CYRILLIC option is necessary, if you have a display with cyrillic characterset.
-// This lcd-display don't have a character for Ohm and for u (micro).
-// Russian language requires a LCD controller with russian characterset and option LCD_CYRILLIC!
+// La opción LCD_CYRILLIC es necesaria si tienes una pantalla con conjunto de caracteres cirílicos.
+// Esta pantalla no tiene un carácter para Ohm y para u (micro).
+// El idioma ruso requiere un controlador LCD con conjunto de caracteres ruso y la opción LCD_CYRILLIC!
 #define LCD_CYRILLIC
 
-// The LCD_DOGM option must be set for support of the DOG-M type of LCD modules with ST7036 controller.
-// For this LCD type the contrast must be set with software command.
-//#define LCD_DOGM
-
-// Option STRIP_GRID_BOARD selects different board-layout, do not set for standard board!
-// The connection of LCD is totally different for both versions.
-//#define STRIP_GRID_BOARD
-
-// The WITH_SELFTEST option enables selftest function (only for mega168 or mega328).
-//#define WITH_SELFTEST
-
-// AUTO_CAL will enable the autocalibration of zero offset of capacity measurement and
-// also the port output resistance values will be find out in SELFTEST section.
-// With a external capacitor a additionally correction of reference voltage is figured out for 
-// low capacity measurement and also for the AUTOSCALE_ADC measurement.
-// The AUTO_CAL option is only selectable for mega168 and mega328.
-//#define AUTO_CAL
-
-// FREQUENCY_50HZ enables a 50 Hz frequency generator for up to one minute at the end of selftests.
+// FREQUENCY_50HZ habilita un generador de frecuencia de 50 Hz durante hasta un minuto al final de los autotests.
 //#define FREQUENCY_50HZ
 
-// The WITH_AUTO_REF option enables reading of internal REF-voltage to get factors for the Capacity measuring.
+// La opción WITH_AUTO_REF habilita la lectura del voltaje de referencia interno para obtener factores para la medición de capacidad.
 #define WITH_AUTO_REF
-// REF_C_KORR corrects the reference Voltage for capacity measurement (<40uF) and has mV units.
-// Greater values gives lower capacity results.
+// REF_C_KORR corrige el voltaje de referencia para la medición de capacidad (<40uF) y tiene unidades de mV. Valores mayores dan resultados de capacidad más bajos.
 #define REF_C_KORR 12
-// REF_L_KORR corrects the reference Voltage for inductance measurement and has mV units.
+// REF_L_KORR corrige el voltaje de referencia para la medición de inductancia y tiene unidades de mV.
 #define REF_L_KORR 40
-// C_H_KORR defines a correction of 0.1% units for big capacitor measurement.
-// Positive values will reduce measurement results.
+// C_H_KORR define una corrección de unidades de 0.1% para mediciones de capacitores grandes. Valores positivos reducirán los resultados de la medición.
 #define C_H_KORR 0
 
-// The WITH_UART option enables the software UART (TTL level output at Pin PC3, 26).
-// If the option is deselected, PC3 can be used as external voltage input with a
-// 10:1 resistor divider.
+// La opción WITH_UART habilita el UART de software (salida de nivel TTL en Pin PC3, 26).
+// Si la opción no está seleccionada, PC3 puede usarse como entrada de voltaje externo con un divisor de resistencias 10:1.
 //#define WITH_UART
 
-// The CAP_EMPTY_LEVEL  defines the empty voltage level for capacitors in mV.
-// Choose a higher value, if your Tester reports "Cell!" by unloading capacitors.
+// El CAP_EMPTY_LEVEL define el nivel de voltaje vacío para capacitores en mV. Elige un valor más alto si tu tester reporta "Cell!" al descargar capacitores.
 #define CAP_EMPTY_LEVEL 4
 
-// The AUTOSCALE_ADC option enables the autoscale ADC (ADC use VCC and Bandgap Ref).
+// La opción AUTOSCALE_ADC habilita el autoscalado del ADC (ADC usa VCC y referencia de banda).
 #define AUTOSCALE_ADC
 #define REF_R_KORR 3
 
-// The ESR_ZERO value define the zero value of ESR measurement (units = 0.01 Ohm).
-//#define ESR_ZERO 29
+// El valor ESR_ZERO define el valor cero de la medición de ESR (unidades = 0.01 Ohm).
 #define ESR_ZERO 20
 
-// NO_AREF_CAP tells your Software, that you have no Capacitor installed at pin AREF (21).
-// This enables a shorter wait-time for AUTOSCALE_ADC function.
-// A capacitor with 1nF can be used with the option NO_AREF_CAP set.
+// NO_AREF_CAP indica al software que no tienes un capacitor instalado en el pin AREF (21).
+// Esto habilita un tiempo de espera más corto para la función AUTOSCALE_ADC.
+// Se puede usar un capacitor de 1nF con la opción NO_AREF_CAP activada.
 #define NO_AREF_CAP
 
-// The OP_MHZ option tells the software the Operating Frequency of your ATmega.
+// El define OP_MHZ le indica al software la frecuencia de operación de tu ATmega.
 // OP_MHZ 16
 
-// Restart from sleep mode will be delayed for 16384 clock tics with crystal mode.
-// Operation with the internal RC-Generator or external clock will delay the restart by only 6 clock tics.
-// You must specify this with "#define RESTART_DELAY_TICS=6", if you don't use the crystal mode.
+// El reinicio desde el modo de suspensión se retrasará por 16384 ticks de reloj con modo de cristal.
+// Operar con el generador RC interno o reloj externo solo retrasará el reinicio por 6 ticks de reloj.
+// Debes especificar esto con "#define RESTART_DELAY_TICS=6", si no usas el modo cristal.
 //#define RESTART_DELAY_TICS 6
 
-// The USE_EEPROM option specify where you wish to locate fix text and tables.
-// If USE_EEPROM is unset, program memory (flash) is taken for fix text and tables.
+// La opción USE_EEPROM especifica dónde deseas ubicar texto fijo y tablas.
+// Si USE_EEPROM no está definido, la memoria de programa (flash) se utiliza para texto fijo y tablas.
 //#define USE_EEPROM
 
-// Setting EBC_STYPE will select the old style to present the order of Transistor connection (EBC=...).
-// Omitting the option will select the 123=... style.  Every point is replaced by a character identifying 
-// type of connected transistor pin (B=Base, E=Emitter, C=Collector, G=Gate, S=Source, D=Drain).
-// If you select EBC_STYLE=321 , the style will be 321=... , the inverted order to the 123=... style.
+// Configurar EBC_STYPE seleccionará el estilo antiguo para presentar el orden de conexión del transistor (EBC=...).
+// Omitir la opción seleccionará el estilo 123=.... Cada punto es reemplazado por un carácter que identifica
+// el tipo de pin del transistor conectado (B=Base, E=Emisor, C=Colector, G=Gate, S=Source, D=Drain).
+// Si seleccionas EBC_STYLE=321, el estilo será 321=..., el orden invertido al estilo 123=...
 //#define EBC_STYLE
 //#define EBC_STYLE 321
 
-// Setting of NO_NANO avoids the use of n as prefix for Farad (nF), the mikro prefix is used insted (uF).
+// Configurar NO_NANO evita el uso de 'n' como prefijo para Farad (nF), se usa el prefijo 'u' en su lugar (uF).
 //#define NO_NANO
 
-// The PULLUP_DISABLE option disable the pull-up Resistors of IO-Ports.
-// To use this option a external pull-up Resistor (10k to 30k)
-// from Pin 13 to VCC must be installed!
+// La opción PULLUP_DISABLE desactiva las resistencias pull-up de los puertos IO. Para usar esta opción, se debe instalar una resistencia pull-up externa (10k a 30k). Desde el Pin 13 a VCC.
 #define PULLUP_DISABLE
 
-// The ANZ_MESS option specifies, how often an ADC value is read and accumulated.
-// Possible values of ANZ_MESS are 5 to 200.
+// La opción ANZ_MESS especifica cuántas veces se lee y acumula un valor ADC. Los valores posibles de ANZ_MESS son de 5 a 200.
 #define ANZ_MESS 25
 
-// The POWER_OFF option enables the power off function, otherwise loop measurements infinitely
-// until power is disconnected with a ON/OFF switch (#define POWER_OFF).
-// If you have the tester without the power off transistors, you can deselect POWER_OFF .
-// If you have NOT selected the POWER_OFF option with the transistors installed,
-// you can stop measuring by holding the key several seconds after a result is
-// displayed. After releasing the key, the tester will be shut off by timeout.
-// Otherwise you can also specify, after how many measurements without found part
-// the tester will shut down (#define POWER_OFF=5).
-// The tester will also shut down with found part,
-// but successfull measurements are allowed double of the specified number.
-// You can specify up to 255 empty measurements (#define POWER_OFF=255).
+// La opción POWER_OFF habilita la función de apagado, de lo contrario, las mediciones se repiten indefinidamente
+// hasta que se desconecte la energía con un interruptor ON/OFF.
+// Si tienes el tester sin los transistores de apagado, puedes deseleccionar POWER_OFF.
+// Si no has seleccionado la opción POWER_OFF con los transistores instalados,
+// puedes detener la medición manteniendo presionada la tecla varios segundos después de mostrar un resultado.
+// Después de soltar la tecla, el tester se apagará por tiempo de espera.
+// De lo contrario, también puedes especificar, después de cuántas mediciones sin encontrar una parte,
+// el tester se apagará (#define POWER_OFF=5). El tester también se apagará al encontrar una parte,
+// pero las mediciones exitosas están permitidas al doble del número especificado.
+// Puedes especificar hasta 255 mediciones vacías (#define POWER_OFF=255).
 //#define POWER_OFF 5
 //#define POWER_OFF
 
-// Option BAT_CHECK enables the Battery Voltage Check, otherwise the SW Version is displayed instead of Bat.
-// BAT_CHECK should be set for battery powered tester version.
+// La opción BAT_CHECK habilita la verificación de voltaje de la batería, de lo contrario, se muestra la versión de software en lugar de Bat.
+// BAT_CHECK debe estar activado para la versión del tester alimentado por batería.
 //#define BAT_CHECK
 
-// The BAT_OUT option enables Battery Voltage Output on LCD (if BAT_CHECK is selected).
-// If your 9V supply has a diode installed, use the BAT_OUT=600 form to specify the
-// threshold voltage of your diode to adjust the output value.
-// This threshold level is added to LCD-output and does not affect the voltage checking levels.
+// La opción BAT_OUT habilita la salida de voltaje de la batería en el LCD (si BAT_CHECK está seleccionado).
+// Si tu suministro de 9V tiene un diodo instalado, usa la forma BAT_OUT=600 para especificar el
+// voltaje umbral de tu diodo y ajustar el valor de salida.
+// Este nivel umbral se agrega a la salida del LCD y no afecta los niveles de verificación de voltaje.
 //#define BAT_OUT 150
 
-// To adjust the warning-level and poor-level of battery check to the capability of a
-// low drop voltage regulator, you can specify the Option BAT_POOR=5400 .
-// The unit for this option value is 1mV , 5400 means a poor level of 5.4V.
-// The warning level is 0.8V higher than the specified poor level (>5.3V).
-// The warning level is 0.4V higher than the specified poor level (>2.9V, <=5.3V).
-// The warning level is 0.2V higher than the specified poor level (>1.3V, <=2.9V).
-// The warning level is 0.1V higher than the specified poor level (<=1.3V).
-// Setting the poor level to low values is not recommended for rechargeable Batteries,
-// because this increase the danger for deep discharge!!
+// Para ajustar el nivel de advertencia y el nivel pobre de la verificación de batería a la capacidad de un
+// regulador de voltaje de baja caída, puedes especificar la opción BAT_POOR=5400.
+// La unidad para este valor de opción es 1mV, 5400 significa un nivel pobre de 5.4V.
+// El nivel de advertencia es 0.8V más alto que el nivel pobre (>5.3V).
+// El nivel de advertencia es 0.4V más alto que el nivel pobre (>2.9V, <=5.3V).
+// El nivel de advertencia es 0.2V más alto que el nivel pobre (>1.3V, <=2.9V).
+// El nivel de advertencia es 0.1V más alto que el nivel pobre (<=1.3V).
+// Configurar el nivel pobre a valores bajos no se recomienda para baterías recargables, ya que esto aumenta el peligro de descarga profunda.
 #define BAT_POOR 6400
 
-// The sleep mode of the ATmega168 or ATmega328 is normally used by the software to save current.
-// You can inhibit this with the option INHIBIT_SLEEP_MODE .
+// El modo de suspensión del ATmega168 o ATmega328 se usa normalmente por el software para ahorrar corriente. Puedes inhibir esto con la opción INHIBIT_SLEEP_MODE.
 //#define INHIBIT_SLEEP_MODE
 
-// ******** end of selectable options
+// ******** fin de las opciones seleccionables
 
 /* -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- */
 
-// ########  Configuration
+// ########  Configuracion
 
 #ifndef ADC_PORT
-//#define DebugOut 3    // if set, output of voltages of resistor measurements in row 2,3,4
-//#define DebugOut 4    // if set, output of voltages of Diode measurement in row 3+4
-//#define DebugOut 5    // if set, output of Transistor checks in row 2+3
-//#define DebugOut 10   // if set, output of capacity measurements (ReadCapacity) in row 3+4 
+//#define DebugOut 3    // si está definido, salida de voltajes de mediciones de resistencias en fila 2,3,4
+//#define DebugOut 4    // si está definido, salida de voltajes de mediciones de Diodo en fila 3+4
+//#define DebugOut 5    // si está definido, salida de comprobaciones de Transistores en fila 2+3
+//#define DebugOut 10   // si está definido, salida de mediciones de capacidad (ReadCapacity) en fila 3+4 
 
 /*
-  Port, that is directly connected to the probes.
-  This Port must have an ADC-Input  (ATmega8:  PORTC).
-  The lower pins of this Port must be used for measurements.
-  Please don't change the definitions of TP1, TP2 and TP3!
-  The TPREF pin can be connected with a 2.5V precision voltage reference
-  The TPext can be used with a 10:1 resistor divider as external voltage probe up to 50V
+  Puerto que está directamente conectado a las sondas. Este puerto debe tener una entrada ADC (ATmega8: PORTC).
+  Los pines inferiores de este puerto deben usarse para las mediciones. ¡No cambiar las definiciones de TP1, TP2 y TP3!
+  El pin TPREF puede conectarse con una referencia de voltaje de precisión de 2.5V.
+  TPext puede usarse con un divisor de resistencias 10:1 como sonda de voltaje externa hasta 50V.
 */
+
 
 #define ADC_PORT PORTC
 #define ADC_DDR DDRC
@@ -239,57 +195,54 @@
 #define TP2 1
 #define TP3 2
 #define TPext 3
-// Port pin for 2.5V precision reference used for VCC check (optional)
+// Pin para referencia de voltaje de precisión de 2.5V usado para verificación de VCC (opcional)
 #define TPREF 4
-// Port pin for Battery voltage measuring
+// Pin para medir voltaje de batería
 #define TPBAT 5
 
 /*
-  exact values of used resistors (Ohm).
-  The standard value for R_L is 680 Ohm, for R_H 470kOhm.
-
-  To calibrate your tester the resistor-values can be adjusted:
+  valores exactos de las resistencias usadas (Ohm). El valor estándar para R_L es 680 Ohm, para R_H 470kOhm.
+  Para calibrar tu tester, los valores de las resistencias pueden ajustarse:
 */
-#define R_L_VAL 6800          // standard value 680 Ohm, multiplied by 10 for 0.1 Ohm resolution
-//#define R_L_VAL 6690        // this will be define a 669 Ohm
-#define R_H_VAL 47000         // standard value 470000 Ohm, multiplied by 10, divided by 100 
-//#define R_H_VAL 47900       // this will be define a 479000 Ohm, divided by 100 
+#define R_L_VAL 6800          // valor estándar 680 Ohm, multiplicado por 10 para resolución de 0.1 Ohm
+//#define R_L_VAL 6690        // esto definirá 669 Ohm
+#define R_H_VAL 47000         // valor estándar 470000 Ohm, multiplicado por 10, dividido por 100 
+//#define R_H_VAL 47900       // esto definirá 479000 Ohm, dividido por 100 
 
 #define R_DDR DDRB
 #define R_PORT PORTB
 
 /*
-  Port for the Test resistors
-  The Resistors must be connected to the lower 6 Pins of the Port in following sequence:
-  RLx = 680R-resistor for Test-Pin x
-  RHx = 470k-resistor for Test-Pin x
+  Puerto para las resistencias de prueba
+  Las resistencias deben conectarse a los 6 pines inferiores del puerto en la siguiente secuencia:
+  RLx = resistencia de 680R para el Pin de prueba x
+  RHx = resistencia de 470k para el Pin de prueba x
 
-  RL1 an Pin 0
-  RH1 an Pin 1
-  RL2 an Pin 2
-  RH2 an Pin 3
-  RL3 an Pin 4
-  RH3 an Pin 5
+  RL1 en Pin 0
+  RH1 en Pin 1
+  RL2 en Pin 2
+  RH2 en Pin 3
+  RL3 en Pin 4
+  RH3 en Pin 5
 */
 
 #define ON_DDR DDRD
 #define ON_PORT PORTD
 #define ON_PIN_REG PIND
-#define ON_PIN 18               // Pin, must be switched to high to switch power on
+#define ON_PIN 18               // Pin, debe ser configurado en high para encender la energía
 
 #ifdef STRIP_GRID_BOARD
-// Strip Grid board version
-  #define RST_PIN 0             // Pin, is switched to low, if push button is pressed
+// Versión de la placa Strip Grid
+  #define RST_PIN 0             // Pin, se configura en low si el botón está presionado
 #else
-// normal layout version
-  #define RST_PIN 17            // Pin, is switched to low, if push button is pressed
+// versión de diseño normal
+  #define RST_PIN 17            // Pin, se configura en low si el botón está presionado
 #endif
 
-
-// Port(s) / Pins for LCD
+// Puerto(s) / Pines para LCD
 
 #ifdef STRIP_GRID_BOARD
-  // special Layout for strip grid board
+  // Layout especial para placa strip grid
   #define HW_LCD_EN_PORT         PORTD
   #define HW_LCD_EN_PIN          5
 
@@ -305,7 +258,7 @@
   #define HW_LCD_B7_PORT         PORTD
   #define HW_LCD_B7_PIN          1
 #else
-  // normal Layout
+  // Diseño normal
   #define HW_LCD_EN_PORT         PORTD
   #define HW_LCD_EN_PIN          6
 
@@ -322,47 +275,41 @@
   #define HW_LCD_B7_PIN          2
 #endif
 
-
-// U_VCC defines the VCC Voltage of the ATmega in mV units
-
+// U_VCC define el voltaje VCC del ATmega en unidades de mV
 #define U_VCC 5000
-// integer factors are used to change the ADC-value to mV resolution in ReadADC !
+// Factores enteros se usan para cambiar el valor ADC a resolución en mV en ReadADC
 
-// With the option NO_CAP_HOLD_TIME you specify, that capacitor loaded with 680 Ohm resistor will not
-// be tested to hold the voltage same time as load time.
-// Otherwise (without this option) the voltage drop during load time is compensated to avoid displaying
-// too much capacity for capacitors with internal parallel resistance.
+// Con la opción NO_CAP_HOLD_TIME especificas que el capacitor cargado con resistencia de 680 Ohm no será
+// probado para mantener el mismo tiempo que el tiempo de carga.
+// De lo contrario (sin esta opción), la caída de voltaje durante el tiempo de carga se compensa para evitar
+// mostrar demasiada capacidad para capacitores con resistencia interna paralela.
 // #define NO_CAP_HOLD_TIME
 
-
-// U_SCALE can be set to 4 for better resolution of ReadADC function for resistor measurement
+// U_SCALE puede configurarse a 4 para mejor resolución de la función ReadADC para medición de resistencias
 #define U_SCALE 4
 
-// R_ANZ_MESS can be set to a higher number of measurements (up to 200) for resistor measurement
+// R_ANZ_MESS puede configurarse a un mayor número de mediciones (hasta 200) para medición de resistencias
 #define R_ANZ_MESS 190
 
 // Watchdog
 //#define WDT_enabled
 /*
-  If you remove the "#define WDT_enabled" , the Watchdog will not be activated.
-  This is only for Test or debugging usefull.
-  For normal operation please activate the Watchdog !
+  Si remueves el "#define WDT_enabled", el Watchdog no se activará.
+  Esto es útil solo para pruebas o depuración. ¡Para operación normal, por favor activa el Watchdog!
 */
-
-// ########  End of configuration 
-
+// ########  Fin de la configuración 
 
 #if R_ANZ_MESS < ANZ_MESS
   #undef R_ANZ_MESS
   #define R_ANZ_MESS ANZ_MESS
 #endif
 #if U_SCALE < 0
-  // limit U_SCALE
+  // limitar U_SCALE
   #undef U_SCALE
   #define U_SCALE 1
 #endif
 #if U_SCALE > 4
-  // limit U_SCALE
+  // limitar U_SCALE
   #undef U_SCALE
   #define U_SCALE 4
 #endif
@@ -370,8 +317,7 @@
   #define REF_L_KORR 50
 #endif
 
-
-// the following definitions specify where to load external data from: EEprom or flash
+// las siguientes definiciones especifican de dónde cargar datos externos: EEprom o flash
 #ifdef USE_EEPROM
   #define MEM_TEXT EEMEM
 
@@ -402,19 +348,17 @@
   #define use_lcd_pgm
 #endif
 
-
-// RH_OFFSET : systematic offset of resistor measurement with RH (470k) 
-// resolution is 0.1 Ohm, 3500 defines a offset of 350 Ohm
+// RH_OFFSET : offset sistemático de la medición de resistencias con RH (470k)
+// resolución es 0.1 Ohm, 3500 define un offset de 350 Ohm
 #define RH_OFFSET 3500 
 
-// TP2_CAP_OFFSET is a additionally offset for TP2 capacity measurements in pF units
+// TP2_CAP_OFFSET es un offset adicional para mediciones de capacidad en TP2 en unidades de pF
 #define TP2_CAP_OFFSET 2
 
-// CABLE_CAP defines the capacity (pF) of 12cm cable with clip at the terminal pins
+// CABLE_CAP define la capacidad (pF) de un cable de 12cm con clip en los pines terminales
 #define CABLE_CAP 3
 
-
-// select the right Processor Typ
+// seleccionar el tipo correcto de procesador
 /*
 #if defined(__AVR_ATmega48__)
   #define PROCESSOR_TYP 168
@@ -444,8 +388,7 @@
 */
 #define PROCESSOR_TYP 328
 
-
-// automatic selection of right call type
+// selección automática del tipo de llamada correcto
 #if FLASHEND > 0X1FFF
   #define ACALL call
 #else
@@ -453,7 +396,7 @@
 #endif
 
 
-// automatic selection of option and parameters for different AVRs
+// selección automática de opción y parámetros para diferentes AVRs
 
 //------------------=========----------
 #if PROCESSOR_TYP == 168
@@ -463,25 +406,25 @@
   #define TI1_INT_FLAGS TIFR1
   #define DEFAULT_BAND_GAP 1070
   #define DEFAULT_RH_FAKT  884      // mega328 1070 mV
-  // LONG_HFE  activates computation of current amplification factor with long variables
+  // LONG_HFE activa el cálculo del factor de amplificación de corriente con variables largas
   #define LONG_HFE
-  // COMMON_COLLECTOR activates measurement of current amplification factor in common collector circuit  (Emitter follower)
+  // COMMON_COLLECTOR activa la medición del factor de amplificación de corriente en circuito colector común (Seguidor de emisor)
   #define COMMON_COLLECTOR
   #define MEGA168A 17
   #define MEGA168PA 18
 
-  // Pin resistor values of ATmega168
+  // Valores de resistencia de pin del ATmega168
   //#define PIN_RM 196
   //#define PIN_RP 225
   #define PIN_RM 190
   #define PIN_RP 220
-  // CC0 defines the capacity of empty terminal pins 1 & 3 without cable
+  // CC0 define la capacidad de los pines terminales vacíos 1 & 3 sin cable
   #define CC0 36
-  // Slew rate correction  val += COMP_SLEW1 / (val + COMP_SLEW2)
+  // Corrección de tasa de subida  val += COMP_SLEW1 / (val + COMP_SLEW2)
   #define COMP_SLEW1 4000
   #define COMP_SLEW2 220
   #define C_NULL CC0+CABLE_CAP+(COMP_SLEW1 / (CC0 + CABLE_CAP + COMP_SLEW2))
-  #define MUX_INT_REF 0x0e  // channel number of internal 1.1 V
+  #define MUX_INT_REF 0x0e  // número de canal de la referencia interna de 1.1 V
 
 //------------------=========----------
 #elif PROCESSOR_TYP == 328
@@ -491,20 +434,20 @@
   #define TI1_INT_FLAGS TIFR1
   #define DEFAULT_BAND_GAP 1070
   #define DEFAULT_RH_FAKT  884      // mega328 1070 mV
-  // LONG_HFE  activates computation of current amplification factor with long variables
+  // LONG_HFE activa el cálculo del factor de amplificación de corriente con variables largas
   #define LONG_HFE
-  // COMMON_COLLECTOR activates measurement of current amplification factor in common collector circuit  (Emitter follower)
+  // COMMON_COLLECTOR activa la medición del factor de amplificación de corriente en circuito colector común (Seguidor de emisor)
   #define COMMON_COLLECTOR
 
   #define PIN_RM 200
   #define PIN_RP 220
-  // CC0 defines the capacity of empty terminal pins 1 & 3 without cable
+   // CC0 define la capacidad de los pines terminales vacíos 1 & 3 sin cable
   #define CC0 36
-  // Slew rate correction  val += COMP_SLEW1 / (val + COMP_SLEW2)
+  // Corrección de tasa de subida  val += COMP_SLEW1 / (val + COMP_SLEW2)
   #define COMP_SLEW1 4000
   #define COMP_SLEW2 180
   #define C_NULL CC0+CABLE_CAP+(COMP_SLEW1 / (CC0 + CABLE_CAP + COMP_SLEW2))
-  #define MUX_INT_REF 0x0e  // channel number of internal 1.1 V
+  #define MUX_INT_REF 0x0e  // número de canal de la referencia interna de 1.1 V
 
 //------------------=========----------
 #elif PROCESSOR_TYP == 1280
@@ -514,20 +457,20 @@
   #define TI1_INT_FLAGS TIFR1
   #define DEFAULT_BAND_GAP 1070
   #define DEFAULT_RH_FAKT  884      // mega328 1070 mV
-  // LONG_HFE  activates computation of current amplification factor with long variables
+  // LONG_HFE activa el cálculo del factor de amplificación de corriente con variables largas
   #define LONG_HFE
-  // COMMON_COLLECTOR activates measurement of current amplification factor in common collector circuit  (Emitter follower)
+  // COMMON_COLLECTOR activa la medición del factor de amplificación de corriente en circuito colector común (Seguidor de emisor)
   #define COMMON_COLLECTOR
 
   #define PIN_RM 200
   #define PIN_RP 220
-  // CC0 defines the capacity of empty terminal pins 1 & 3 without cable
+  // CC0 define la capacidad de los pines terminales vacíos 1 & 3 sin cable
   #define CC0 36
-  // Slew rate correction  val += COMP_SLEW1 / (val + COMP_SLEW2)
+  // Corrección de tasa de subida  val += COMP_SLEW1 / (val + COMP_SLEW2)
   #define COMP_SLEW1 4000
   #define COMP_SLEW2 180
   #define C_NULL CC0+CABLE_CAP+(COMP_SLEW1 / (CC0 + CABLE_CAP + COMP_SLEW2))
-  #define MUX_INT_REF 0x1e  /* channel number of internal 1.1 V */
+  #define MUX_INT_REF 0x1e  /* número de canal de la referencia interna de 1.1 V */
 
 //------------------=========----------
 #else
@@ -538,36 +481,36 @@
   #define TI1_INT_FLAGS TIFR
   #define DEFAULT_BAND_GAP 1298   //mega8 1298 mV
   #define DEFAULT_RH_FAKT  740      // mega8 1250 mV
-  // LONG_HFE  activates computation of current amplification factor with long variables
+   // LONG_HFE activa el cálculo del factor de amplificación de corriente con variables largas
   #define LONG_HFE
-  // COMMON_COLLECTOR activates measurement of current amplification factor in common collector circuit  (Emitter follower)
+  // COMMON_COLLECTOR activa la medición del factor de amplificación de corriente en circuito colector común (Seguidor de emisor)
   #define COMMON_COLLECTOR
 
   #define PIN_RM 196
   #define PIN_RP 240
-  // CC0 defines the capacity of empty terminal pins 1 & 3 without cable
+  // CC0 define la capacidad de los pines terminales vacíos 1 & 3 sin cable
   #define CC0 27
-  // Slew rate correction  val += COMP_SLEW1 / (val + COMP_SLEW2)
+  // Corrección de tasa de subida  val += COMP_SLEW1 / (val + COMP_SLEW2)
   #define COMP_SLEW1 0
   #define COMP_SLEW2 33
   #define C_NULL CC0+CABLE_CAP+(COMP_SLEW1 / (CC0 + CABLE_CAP + COMP_SLEW2))
-  #define MUX_INT_REF 0x0e  /* channel number of internal 1.1 V */
+  #define MUX_INT_REF 0x0e  /* número de canal de la referencia interna de 1.1 V */
 
   #ifndef INHIBIT_SLEEP_MODE
-    #define INHIBIT_SLEEP_MODE  /* do not use the sleep mode of ATmega */
+    #define INHIBIT_SLEEP_MODE  /* no usar el modo de suspensión del ATmega */
   #endif
 #endif
 
 #if PROCESSOR_TYP == 8
-  // 2.54V reference voltage + correction (fix for ATmega8)
-  #ifdef AUTO_CAL
+  // Voltaje de referencia de 2.54V + corrección (fix para ATmega8)
+#ifdef AUTO_CAL
     #define ADC_internal_reference (2560 + (int8_t)eeprom_read_byte((uint8_t *)&RefDiff))
   #else
     #define ADC_internal_reference (2560 + REF_R_KORR)
   #endif
 #else
-  // all other processors use a 1.1V reference
-  #ifdef AUTO_CAL
+  // todos los demás procesadores usan una referencia de 1.1V
+#ifdef AUTO_CAL
     #define ADC_internal_reference (ref_mv + (int8_t)eeprom_read_byte((uint8_t *)&RefDiff))
   #else
     #define ADC_internal_reference (ref_mv + REF_R_KORR)
@@ -586,26 +529,25 @@
 #define SHORT_WAIT_TIME 5000
 
 #ifdef POWER_OFF
-  // if POWER OFF function is selected, wait 14s
-  // if POWER_OFF with parameter > 2, wait only 5s before repeating
+  // si la función POWER OFF está seleccionada, esperar 14s. Si POWER_OFF con parámetro > 2, esperar solo 5s antes de repetir.
   #if (POWER_OFF+0) > 2
     #define OFF_WAIT_TIME SHORT_WAIT_TIME
   #else
     #define OFF_WAIT_TIME LONG_WAIT_TIME
   #endif
 #else
-  // if POWER OFF function is not selected, wait 14s before repeat measurement
+  // si la función POWER OFF no está seleccionada, esperar 14s antes de repetir medición
   #define OFF_WAIT_TIME  LONG_WAIT_TIME
 #endif
 
 
 //**********************************************************
-// defines for the selection of a correctly  ADC-Clock 
-// will match for 1MHz, 2MHz, 4MHz, 8MHz and 16MHz
-// ADC-Clock can be 125000 or 250000 
-// 250 kHz is out of the full accuracy specification!
-// clock divider is 4, when CPU_Clock==1MHz and ADC_Clock==250kHz
-// clock divider is 128, when CPU_Clock==16MHz and ADC_Clock==125kHz
+// Definiciones para la selección de un ADC-Clock correcto
+// coincidirá para 1MHz, 2MHz, 4MHz, 8MHz y 16MHz
+// ADC-Clock puede ser 125000 o 250000 
+// 250 kHz está fuera de la especificación de precisión completa!
+// divisor de reloj es 4, cuando CPU_Clock==1MHz y ADC_Clock==250kHz
+// divisor de reloj es 128, cuando CPU_Clock==16MHz y ADC_Clock==125kHz
 #define F_ADC 125000
 //#define F_ADC 250000
 #if F_CPU/F_ADC == 2
@@ -653,35 +595,26 @@
   #define FAST_CLOCK_DIV (1<<ADPS2) | (1<<ADPS1) | (1<<ADPS0)
 #endif
 
-
 #ifndef PIN_RP
-  #define PIN_RP  220           // estimated internal resistance PORT to VCC
-                                // will only be used, if not set before in config.h
+  #define PIN_RP  220           // resistencia interna estimada PORT a VCC. Solo se usará, si no se define antes en config.h
 #endif
 #ifndef PIN_RM
-  #define PIN_RM  190           // estimated internal resistance PORT to GND
-                                // will only be used, if not set before in config.h
+  #define PIN_RM  190           // resistencia interna estimada PORT a GND. Solo se usará, si no se define antes en config.h
 #endif
 
 //**********************************************************
 
-// defines for the WITH_UART option
-/*
-With define SWUART_INVERT you can specify, if the software-UART operates normal or invers.
-in the normal mode the UART sends with usual logik level (Low = 0; High = 1).
-You can use this mode for direct connection to a uC, or a level converter like MAX232.
-
-With invers mode the UART sends with invers logik (Low = 1, High = 0).
-This is the level of a standard RS232 port of a PC.
-In most cases the output of the software UART can so be connected to the RxD of a PC.
-The specification say, that level -3V to 3V is unspecified, but in most cases it works.
-Is a simple but unclean solution.
-
-Is SWUART_INVERT defined, the UART works is inverse mode
-*/
+// Definiciones para la opción WITH_UART
+/* Con define SWUART_INVERT puedes especificar si el UART de software opera de forma normal o inversa.
+En modo normal, el UART envía con el nivel lógico usual (Bajo = 0; Alto = 1).
+Puedes usar este modo para conexión directa a un microcontrolador, o un convertidor de nivel como MAX232.
+Con modo inverso, el UART envía con lógica inversa (Bajo = 1, Alto = 0).
+Este es el nivel de un puerto RS232 estándar de una PC.
+La especificación dice que el nivel -3V a 3V es no especificado, pero en la mayoría de los casos funciona. Es una solución simple pero poco limpia.
+Si SWUART_INVERT está definido, el UART funciona en modo inverso. */
 //#define SWUART_INVERT
 
-#define TxD 3   // TxD-Pin of Software-UART; must be at Port C !
+#define TxD 3   // Pin TxD del UART de software; debe estar en el Puerto C!
 #ifdef WITH_UART
   #define TXD_MSK (1<<TxD)
 #else
@@ -694,9 +627,8 @@ Is SWUART_INVERT defined, the UART works is inverse mode
   #define TXD_VAL TXD_MSK
 #endif
 
-
 #ifdef INHIBIT_SLEEP_MODE
-  // save memory, do not use the sleep mode
+  // ahorrar memoria, no usar el modo de suspensión
   #define wait_about5ms() wait5ms()
   #define wait_about10ms() wait10ms()
   #define wait_about20ms() wait20ms()
@@ -712,7 +644,7 @@ Is SWUART_INVERT defined, the UART works is inverse mode
   #define wait_about3s() wait3s()
   #define wait_about4s() wait4s()
 #else
-  // use sleep mode to save current for user interface
+  // usar el modo de suspensión para ahorrar corriente en la interfaz de usuario
   #define wait_about5ms() sleep_5ms(1)
   #define wait_about10ms() sleep_5ms(2)
   #define wait_about20ms() sleep_5ms(4)
@@ -729,7 +661,6 @@ Is SWUART_INVERT defined, the UART works is inverse mode
   #define wait_about4s() sleep_5ms(800)
 #endif
 
-
 #undef AUTO_RH
 #ifdef WITH_AUTO_REF
   #define AUTO_RH
@@ -741,12 +672,12 @@ Is SWUART_INVERT defined, the UART works is inverse mode
 
 #undef CHECK_CALL
 #ifdef WITH_SELFTEST
-  // AutoCheck Function is needed
+  // Función AutoCheck es necesaria
   #define CHECK_CALL
 #endif
 
 #ifdef AUTO_CAL
-  // AutoCheck Function is needed
+  // Función AutoCheck es necesaria
   #define CHECK_CALL
   #define RR680PL resis680pl
   #define RR680MI resis680mi
@@ -760,22 +691,22 @@ Is SWUART_INVERT defined, the UART works is inverse mode
 #endif
 
 #ifndef ESR_ZERO
-  // define a default zero value for ESR measurement (0.01 Ohm units)
+  // define un valor cero por defecto para la medición de ESR (unidades = 0.01 Ohm)
   #define ESR_ZERO 20
 #endif
 
 #ifndef RESTART_DELAY_TICS
-  // define the processor restart delay for crystal oscillator 16K
-  // only set, if no preset (Makefile) exists.
+  // define el retraso de reinicio del procesador para oscilador de cristal 16K
+  // solo se establece, si no existe un preset (Makefile).
   #define RESTART_DELAY_TICS 16384
-  // for ceramic oscillator 258 or 1024 Clock tics can be selected with fuses
-  // for external oscillator or RC-oscillator is only a delay of 6 clock tics.
+  // para oscilador cerámico 258 o 1024 ticks de reloj pueden seleccionarse con los fusibles
+  // para oscilador externo o RC solo un retraso de 6 ticks de reloj.
 #endif
 
-// with EBC_STYLE you can select the Pin-description in EBC= style instead of 123=??? style
+// con EBC_STYLE puedes seleccionar la descripción de pines en estilo EBC= en lugar de estilo 123=???
 //#define EBC_STYLE
 #if EBC_STYLE == 123
-  // unset the option for the 123 selection, since this style is default.
+  // desactivar la opción para la selección 123, ya que este estilo es el predeterminado.
   #undef EBC_STYLE
 #endif
 
@@ -790,37 +721,37 @@ Is SWUART_INVERT defined, the UART works is inverse mode
   #define LCD_CHAR_U      0xB5
 
 #else
-  // self build characters 
-  #define LCD_CHAR_DIODE1  1      // Diode-Icon; will be generated as custom character
-  #define LCD_CHAR_DIODE2  2      // Diode-Icon; will be generated as custom character
-  #define LCD_CHAR_CAP 3          // Capacitor-Icon;  will be generated as custom character
-  // numbers of RESIS1 and RESIS2 are swapped for OLED display, which shows a corrupt RESIS1 character otherwise ???
-  #define LCD_CHAR_RESIS1 7       // Resistor left part will be generated as custom character
-  #define LCD_CHAR_RESIS2 6       // Resistor right part will be generated as custom character
+  // caracteres construidos por el usuario
+  #define LCD_CHAR_DIODE1  1      // Icono de Diodo; se generará como carácter personalizado
+  #define LCD_CHAR_DIODE2  2      // Icono de Diodo; se generará como carácter personalizado
+  #define LCD_CHAR_CAP 3          // Icono de Capacitor; se generará como carácter personalizado
+  // los números de RESIS1 y RESIS2 están intercambiados para la pantalla OLED, que muestra un carácter RESIS1 corrupto de lo contrario ???
+  #define LCD_CHAR_RESIS1 7       // Parte izquierda del resistor se generará como carácter personalizado
+  #define LCD_CHAR_RESIS2 6       // Parte derecha del resistor se generará como carácter personalizado
 
   #ifdef LCD_CYRILLIC
-    #define LCD_CHAR_OMEGA  4       // Omega-character
-    #define LCD_CHAR_U  5           // micro-character
+    #define LCD_CHAR_OMEGA  4       // Carácter Omega
+    #define LCD_CHAR_U  5           // Carácter micro
   #else
-    #define LCD_CHAR_OMEGA  244     // Omega-character
-    #define LCD_CHAR_U  228         // micro-character
+    #define LCD_CHAR_OMEGA  244     // Carácter Omega
+    #define LCD_CHAR_U  228         // Carácter micro
   #endif
 
   #ifdef LCD_DOGM
     #undef LCD_CHAR_OMEGA
-    #define LCD_CHAR_OMEGA 0x1e     // Omega-character for DOGM module
+    #define LCD_CHAR_OMEGA 0x1e     // Carácter Omega para módulo DOGM
     #undef LCD_CHAR_U
-    #define LCD_CHAR_U  5           // micro-character for DOGM module loadable
+    #define LCD_CHAR_U  5           // Carácter micro para módulo DOGM cargable
   #endif
 
-  #define LCD_CHAR_DEGREE 0xdf      // Character for degree
+  #define LCD_CHAR_DEGREE 0xdf      // Carácter para grados
 #endif
 
 #endif  // #ifndef ADC_PORT
 
 
-// the hFE (B) can be determined with common collector and common emitter circuit
-// with more than 16K both methodes are possible
+// el hFE (B) puede determinarse con circuito colector común y emisor común
+// con más de 16K ambos métodos son posibles
 #ifdef COMMON_COLLECTOR
   #if FLASHEND > 0x3fff
     #define COMMON_EMITTER
@@ -836,21 +767,20 @@ Is SWUART_INVERT defined, the UART works is inverse mode
 #if defined (MAIN_C)
   #define COMMON
   /*
-  The voltage at a capacitor grows with  Uc = VCC * (1 - e**(-t/T))
-  The voltage 1.3V is reached at  t = -ln(3.7/5)*T  = 0.3011*T . 
-  Time constant is  T = R * C ; also
+  La tensión en un capacitor crece con Uc = VCC * (1 - e**(-t/T))
+  La tensión de 1.3V se alcanza en t = -ln(3.7/5)*T = 0.3011*T. 
+  La constante de tiempo es T = R * C ; entonces
   C = T / R
-  for the resistor 470 kOhm  is C = t / (0.3011 * 470000)
-  H_Fakt = 707/100 for a result in pF units.
+  para la resistencia de 470 kOhm, C = t / (0.3011 * 470000)
+  H_Fakt = 707/100 para un resultado en unidades de pF.
   */
 
-// Big Capacities (>50uF) are measured with up to 500 load-pulses with the 680 Ohm resistor.
-// Each  of this load-puls has an length of 10ms. After every load-pulse the voltage of the
-// capacitor is measured. If the voltage is more than 300mV, the capacity is computed by
-// interpolating the corresponding values of the table RLtab and multiply that with the number
-// of load pulses (*10).
+// Capacidades grandes (>50uF) se miden con hasta 500 pulsos de carga usando la resistencia de 680 Ohm.
+// Cada uno de estos pulsos de carga tiene una duración de 10ms. Después de cada pulso de carga, se mide la
+// tensión del capacitor. Si la tensión es superior a 300mV, la capacidad se calcula interpolando los valores
+// correspondientes de la tabla RLtab y multiplicando por el número de pulsos de carga (*10).
 
-// Widerstand 680 Ohm                300   325   350   375   400   425   450   475   500   525   550   575   600   625   650   675   700   725   750   775   800   825   850   875   900   925   950   975  1000  1025  1050  1075  1100  1125  1150  1175  1200  1225  1250  1275  1300  1325  1350  1375  1400  mV
+// Resistencia de 680 Ohm                300   325   350   375   400   425   450   475   500   525   550   575   600   625   650   675   700   725   750   775   800   825   850   875   900   925   950   975  1000  1025  1050  1075  1100  1125  1150  1175  1200  1225  1250  1275  1300  1325  1350  1375  1400  mV
 const uint16_t RLtab[] MEM_TEXT = {22447,20665,19138,17815,16657,15635,14727,13914,13182,12520,11918,11369,10865,10401, 9973, 9577, 9209, 8866, 8546, 8247, 7966, 7702, 7454, 7220, 6999, 6789, 6591, 6403, 6224, 6054, 5892, 5738, 5590, 5449, 5314, 5185, 5061, 4942, 4828, 4718, 4613, 4511, 4413, 4319, 4228};
 
 #if FLASHEND > 0x1fff
@@ -859,15 +789,13 @@ const uint16_t RLtab[] MEM_TEXT = {22447,20665,19138,17815,16657,15635,14727,139
 #endif
 
 #ifdef AUTO_RH
-  // resistor  470000 Ohm      1000 1050 1100 1150 1200 1250 1300 1350 1400  mV
+  // resistencia  470000 Ohm      1000 1050 1100 1150 1200 1250 1300 1350 1400  mV
   const uint16_t RHtab[] PROGMEM = { 954, 903, 856, 814, 775, 740, 707, 676, 648};
 #endif
 
-// with integer factors the ADC-value will be changed to mV resolution in ReadADC !
-// all if statements are corrected to the mV resolution.
-
-
-// Strings in PROGMEM or in EEprom
+// Con factores enteros, el valor del ADC se convertirá a resolución en mV en ReadADC.
+// Todas las sentencias if están corregidas para la resolución en mV.
+// Cadenas en PROGMEM o en EEprom
 
 #if defined(LANG_GERMAN)    // deutsch
    const unsigned char TestRunning[] MEM_TEXT = "Testen...";
@@ -890,23 +818,24 @@ const uint16_t RLtab[] MEM_TEXT = {22447,20665,19138,17815,16657,15635,14727,139
  #endif
 #endif
 
-#if defined(LANG_ENGLISH)   // english
-  const unsigned char TestRunning[] MEM_TEXT = "probando...";
-  const unsigned char BatWeak[] MEM_TEXT = "debil";
-  const unsigned char BatEmpty[] MEM_TEXT = "vacio!";
+#if defined(LANG_SPANISH)   // traduccion, usando de base el set de idioma ingles
+  const unsigned char TestRunning[] MEM_TEXT = "Probando...";
+  const unsigned char BatWeak[] MEM_TEXT = "Bat. baja";
+  const unsigned char BatEmpty[] MEM_TEXT = "Bat. vacia!";
   const unsigned char TestFailed2[] MEM_TEXT = "dañado ";
   const unsigned char Component[] MEM_TEXT = "parte";
-  //const unsigned char Diode[] MEM_TEXT = "Diode: ";
+  const unsigned char Diode[] MEM_TEXT = "Diodo: ";
+  const unsigned char Component[] MEM_TEXT = "Componente";
   const unsigned char Triac[] MEM_TEXT = "Triac";
-  const unsigned char Thyristor[] MEM_TEXT = "Thyristor";
-  const unsigned char Unknown[] MEM_TEXT = " desconocido";
-  const unsigned char TestFailed1[] MEM_TEXT = "No, desconocido, o";
-  const unsigned char OrBroken[] MEM_TEXT = "o dañado ";
-  const unsigned char TestTimedOut[] MEM_TEXT = "Timeout!";
-  #define Cathode_char 'C'
+  const unsigned char Thyristor[] MEM_TEXT = "Tiristor";
+  const unsigned char Unknown[] MEM_TEXT = "Desconocido";
+  const unsigned char TestFailed1[] MEM_TEXT = "No identificado, o";
+  const unsigned char OrBroken[] MEM_TEXT = "o dañado";
+  const unsigned char TestTimedOut[] MEM_TEXT = "Tiempo agotado!";
+  #define Cathode_char 'C'  // Caracter para cátodo
 
   #ifdef WITH_SELFTEST
-    const unsigned char SELFTEST[] MEM_TEXT = "Modo de Autotest..";
+    const unsigned char SELFTEST[] MEM_TEXT = "Modo de Autotest...";
     const unsigned char RELPROBE[] MEM_TEXT = "Aislar Sonda!";
     const unsigned char ATE[] MEM_TEXT = "Fin del Test";
   #endif
@@ -962,7 +891,7 @@ const unsigned char VCC_str[] MEM_TEXT = "VCC=";
 #endif
 
 
-const unsigned char VERSION_str[] MEM2_TEXT = "Ttester 1.08.4";
+const unsigned char VERSION_str[] MEM2_TEXT = "Super Tester!";
 
 const unsigned char AnKat[] MEM_TEXT = {'-', LCD_CHAR_DIODE1, '-',0};
 const unsigned char KatAn[] MEM_TEXT = {'-', LCD_CHAR_DIODE2, '-',0};
@@ -998,33 +927,35 @@ const unsigned char Resistor_str[] MEM_TEXT = {'-', LCD_CHAR_RESIS1, LCD_CHAR_RE
   #define LCD_CLEAR
 #endif
 
+// Íconos para símbolos gráficos en la pantalla
+const unsigned char DiodeIcon1[] MEM_TEXT = { 0x11, 0x19, 0x1d, 0x1f, 0x1d, 0x19, 0x11, 0x00 }; // Ícono Diodo - Ánodo izquierda
+const unsigned char DiodeIcon2[] MEM_TEXT = { 0x11, 0x13, 0x17, 0x1f, 0x17, 0x13, 0x11, 0x00 }; // Ícono Diodo - Ánodo derecha
+const unsigned char CapIcon[]    MEM_TEXT = { 0x1b, 0x1b, 0x1b, 0x1b, 0x1b, 0x1b, 0x1b, 0x00 }; // Ícono Capacitor
+const unsigned char ResIcon1[]   MEM_TEXT = { 0x00, 0x0f, 0x08, 0x18, 0x08, 0x0f, 0x00, 0x00 }; // Ícono Resistor - Lado izquierdo
+const unsigned char ResIcon2[]   MEM_TEXT = { 0x00, 0x1e, 0x02, 0x03, 0x02, 0x1e, 0x00, 0x00 }; // Ícono Resistor - Lado derecho
+const unsigned char OmegaIcon[]  MEM_TEXT = { 0x00, 0x00, 0x0e, 0x11, 0x11, 0x0a, 0x1b, 0x00 }; // Ícono Omega
+const unsigned char MicroIcon[]  MEM_TEXT = { 0x00, 0x00, 0x0a, 0x0a, 0x0a, 0x0e, 0x09, 0x10 }; // Ícono Micro
 
-const unsigned char DiodeIcon1[] MEM_TEXT = { 0x11, 0x19, 0x1d, 0x1f, 0x1d, 0x19, 0x11, 0x00 }; // Diode-Icon Anode left
-const unsigned char DiodeIcon2[] MEM_TEXT = { 0x11, 0x13, 0x17, 0x1f, 0x17, 0x13, 0x11, 0x00 }; // Diode-Icon Anode right
-const unsigned char CapIcon[]    MEM_TEXT = { 0x1b, 0x1b, 0x1b, 0x1b, 0x1b, 0x1b, 0x1b, 0x00 }; // Capacitor Icon
-const unsigned char ResIcon1[]   MEM_TEXT = { 0x00, 0x0f, 0x08, 0x18, 0x08, 0x0f, 0x00, 0x00 }; // Resistor Icon1 left
-const unsigned char ResIcon2[]   MEM_TEXT = { 0x00, 0x1e, 0x02, 0x03, 0x02, 0x1e, 0x00, 0x00 }; // Resistor Icon2 right
-const unsigned char OmegaIcon[]  MEM_TEXT = { 0x00, 0x00, 0x0e, 0x11, 0x11, 0x0a, 0x1b, 0x00 }; // Omega Icon
-const unsigned char MicroIcon[]  MEM_TEXT = { 0x00, 0x00, 0x0a, 0x0a, 0x0a, 0x0e, 0x09, 0x10 }; // Micro Icon
-
-const unsigned char PinRLtab[] PROGMEM = { (1<<(TP1*2)), (1<<(TP2*2)), (1<<(TP3*2))};  // Table of commands to switch the  R-L resistors Pin 0,1,2
-const unsigned char PinADCtab[] PROGMEM = { (1<<TP1), (1<<TP2), (1<<TP3)};  // Table of commands to switch the ADC-Pins 0,1,2
+// Tablas de comandos para cambiar las resistencias R-L en los pines 0, 1 y 2
+const unsigned char PinRLtab[] PROGMEM = { (1<<(TP1*2)), (1<<(TP2*2)), (1<<(TP3*2))};  // Tabla de comandos para cambiar resistencias R-L en los pines 0, 1 y 2
+const unsigned char PinADCtab[] PROGMEM = { (1<<TP1), (1<<TP2), (1<<TP3)};  // Tabla de comandos para cambiar los pines ADC en 0, 1 y 2
 
 /*
-// generate Omega- and u-character as Custom-character, if these characters has a number of loadable type
+// Generar el carácter Omega y el carácter u (micro) como caracteres personalizados, si estos caracteres tienen un tipo de número cargable
 #if LCD_CHAR_OMEGA < 8
   const unsigned char CyrillicOmegaIcon[] MEM_TEXT = {0,0,14,17,17,10,27,0};  // Omega
 #endif
 #if LCD_CHAR_U < 8
-  const unsigned char CyrillicMuIcon[] MEM_TEXT = {0,17,17,17,19,29,16,16}; // micro
+  const unsigned char CyrillicMuIcon[] MEM_TEXT = {0,17,17,17,19,29,16,16}; // Micro
 #endif
 */
 
 #ifdef AUTO_CAL
-  //const uint16_t R680pl EEMEM = R_L_VAL+PIN_RP; // total resistor to VCC
-  //const uint16_t R680mi EEMEM = R_L_VAL+PIN_RM; // total resistor to GND
-  const int8_t RefDiff EEMEM = REF_R_KORR;    // correction of internal Reference Voltage
+  //const uint16_t R680pl EEMEM = R_L_VAL+PIN_RP; // resistencia total a VCC
+  //const uint16_t R680mi EEMEM = R_L_VAL+PIN_RM; // resistencia total a GND
+  const int8_t RefDiff EEMEM = REF_R_KORR;    // corrección del voltaje de referencia interno
 #endif
+
 
 const uint8_t PrefixTab[] MEM_TEXT = { 'p','n',LCD_CHAR_U,'m',0,'k','M'};  // p,n,u,m,-,k,M
 
@@ -1037,47 +968,44 @@ const uint8_t PrefixTab[] MEM_TEXT = { 'p','n',LCD_CHAR_U,'m',0,'k','M'};  // p,
 
 const uint8_t EE_ESR_ZEROtab[] PROGMEM = {ESR_ZERO, ESR_ZERO, ESR_ZERO, ESR_ZERO};  // zero offset of ESR measurement
 
-// End of EEPROM-Strings
+// Fin de las cadenas en EEPROM
 
-// Multiplier for capacity measurement with R_H (470KOhm)
+// Multiplicador para la medición de capacidad con R_H (470KOhm)
 unsigned int RHmultip = DEFAULT_RH_FAKT;
-
-
 #else
-  // no MAIN_C
+  // No está definido MAIN_C
   #define COMMON extern
   #ifdef WITH_SELFTEST
-    extern const unsigned char SELFTEST[] MEM_TEXT;
-    extern const unsigned char RELPROBE[] MEM_TEXT;
-    extern const unsigned char ATE[] MEM_TEXT;
+    extern const unsigned char SELFTEST[] MEM_TEXT;  // Modo de autotest
+    extern const unsigned char RELPROBE[] MEM_TEXT;  // Aislar sonda
+    extern const unsigned char ATE[] MEM_TEXT;       // Fin del autotest
   #endif
 
   #ifdef AUTO_CAL
-    //extern uint16_t R680pl;
-    //extern uint16_t R680mi;
-    extern int8_t RefDiff;
-    extern uint16_t ref_offset;
-    extern uint8_t c_zero_tab[];
+    //extern uint16_t R680pl;   // Resistencia total hacia VCC
+    //extern uint16_t R680mi;   // Resistencia total hacia GND
+    extern int8_t RefDiff;      // Corrección de la referencia de voltaje interno
+    extern uint16_t ref_offset; // Offset de referencia
+    extern uint8_t c_zero_tab[]; // Tabla de ajuste cero de capacidad
   #endif
 
-  extern const uint8_t EE_ESR_ZEROtab[] EEMEM;  // zero offset of ESR measurement
-  extern const uint16_t RLtab[];
+  extern const uint8_t EE_ESR_ZEROtab[] EEMEM;  // Offset cero para la medición de ESR
+  extern const uint16_t RLtab[];                // Tabla de resistencias de carga (RLtab)
 
   #if FLASHEND > 0x1fff
-    extern uint16_t LogTab[];
-    extern const unsigned char ESR_str[];
+    extern uint16_t LogTab[];                   // Tabla logarítmica de referencia
+    extern const unsigned char ESR_str[];       // Cadena para el valor ESR
   #endif
 
   #ifdef AUTO_RH
-    extern const uint16_t RHtab[];
+    extern const uint16_t RHtab[];              // Tabla de valores de resistencia RH
   #endif
 
-  extern const unsigned char PinRLtab[];
-  extern const unsigned char PinADCtab[];
-  extern unsigned int RHmultip;
+  extern const unsigned char PinRLtab[];        // Tabla de pines para resistencias RL
+  extern const unsigned char PinADCtab[];       // Tabla de pines para los ADC
+  extern unsigned int RHmultip;                 // Multiplicador de RH
 
 #endif  // MAIN_C
-
 
 struct Diode_t {
   uint8_t Anode;
@@ -1089,83 +1017,84 @@ COMMON struct Diode_t diodes[6];
 COMMON uint8_t NumOfDiodes;
 
 COMMON struct {
-  unsigned long hfe[2];   // current amplification factor 
-  unsigned int uBE[2];    // B-E-voltage of the Transistor
-  uint8_t b,c,e;    // pins of the Transistor
-}trans;
+  unsigned long hfe[2];   // Factor de amplificación de corriente
+  unsigned int uBE[2];    // Voltaje B-E del transistor
+  uint8_t b, c, e;        // Pines del transistor
+} trans;
 
-COMMON unsigned int gthvoltage; // Gate-threshold voltage 
+COMMON unsigned int gthvoltage;  // Voltaje de umbral de la puerta (Gate)
 
-COMMON uint8_t PartReady; // part detection is finished 
-COMMON uint8_t PartMode;
-COMMON uint8_t tmpval, tmpval2;
-COMMON unsigned int ref_mv;     // Reference-voltage  in mV units
+COMMON uint8_t PartReady;  // Detección de componente terminada
+COMMON uint8_t PartMode;   // Modo de componente
+COMMON uint8_t tmpval, tmpval2;  // Variables temporales
+COMMON unsigned int ref_mv;  // Voltaje de referencia en unidades de mV
 
-COMMON struct resis_t{
-  unsigned long rx;   // value of resistor RX  
+COMMON struct resis_t {
+  unsigned long rx;       // Valor de la resistencia RX
   #if FLASHEND > 0x1fff
-    unsigned long lx;   // inductance 10uH or 100uH
-    int8_t lpre;    // prefix for inductance
+    unsigned long lx;     // Inductancia en 10uH o 100uH
+    int8_t lpre;          // Prefijo para la inductancia
   #endif
-  uint8_t ra,rb;    // Pins of RX
-  uint8_t rt;     // Tristate-Pin (inactive)
+  uint8_t ra, rb;         // Pines de RX
+  uint8_t rt;             // Pin en estado de alta impedancia (inactivo)
 } resis[3];
 
-COMMON uint8_t ResistorsFound;  // Number of found resistors
-COMMON uint8_t ii;    // multipurpose counter
+COMMON uint8_t ResistorsFound;  // Número de resistencias encontradas
+COMMON uint8_t ii;              // Contador de uso general
 
 COMMON struct cap_t {
-  unsigned long cval;   // capacitor value 
-  unsigned long cval_max; // capacitor with maximum value
-  union t_combi{
-  unsigned long dw;   // capacity value without corrections
-  uint16_t w[2];
+  unsigned long cval;          // Valor del capacitor
+  unsigned long cval_max;      // Valor máximo de capacitor
+  union t_combi {
+    unsigned long dw;          // Valor de capacidad sin correcciones
+    uint16_t w[2];
   } cval_uncorrected;
   #if FLASHEND > 0x1fff
-    unsigned int esr;   // serial resistance of C in 0.01 Ohm
-    unsigned int v_loss;  // voltage loss 0.1%
+    unsigned int esr;          // Resistencia serie del capacitor en 0.01 Ohm
+    unsigned int v_loss;       // Pérdida de voltaje en 0.1%
   #endif
-  uint8_t ca, cb;   // pins of capacitor
-  int8_t cpre;      // Prefix for capacitor value  -12=p, -9=n, -6=u, -3=m
-  int8_t cpre_max;    // Prefix of the biggest capacitor
+  uint8_t ca, cb;              // Pines del capacitor
+  int8_t cpre;                 // Prefijo para el valor del capacitor -12=p, -9=n, -6=u, -3=m
+  int8_t cpre_max;             // Prefijo del capacitor más grande
 } cap;
 
+
 #ifndef INHIBIT_SLEEP_MODE
-  // with sleep mode we need a global ovcnt16
+  // Con el modo de suspensión, necesitamos una variable global ovcnt16
   COMMON volatile uint16_t ovcnt16;
   COMMON volatile uint8_t unfinished;
 #endif
 
-COMMON int16_t load_diff; // difference voltage of loaded capacitor and internal reference
+COMMON int16_t load_diff; // Diferencia de voltaje entre el capacitor cargado y la referencia interna
 
-COMMON uint8_t WithReference; // Marker for found precision voltage reference = 1
-COMMON uint8_t PartFound; // the found part 
-COMMON char outval[12];   // String for ASCII-outpu
-COMMON uint8_t empty_count; // counter for max count of empty measurements
-COMMON uint8_t mess_count;  // counter for max count of nonempty measurements
+COMMON uint8_t WithReference; // Marcador para indicar referencia de voltaje de precisión encontrada = 1
+COMMON uint8_t PartFound;     // Componente detectado
+COMMON char outval[12];       // Cadena para salida en formato ASCII
+COMMON uint8_t empty_count;   // Contador para el máximo número de mediciones vacías
+COMMON uint8_t mess_count;    // Contador para el máximo número de mediciones no vacías
 
 COMMON struct ADCconfig_t {
-  uint8_t Samples;    // number of ADC samples to take
-  uint8_t RefFlag;    // save Reference type VCC of IntRef
-  uint16_t U_Bandgap;   // Reference Voltage in mV
-  uint16_t U_AVCC;    // Voltage of AVCC
+  uint8_t Samples;         // Número de muestras de ADC a tomar
+  uint8_t RefFlag;         // Tipo de referencia (VCC o IntRef)
+  uint16_t U_Bandgap;      // Voltaje de referencia en mV
+  uint16_t U_AVCC;         // Voltaje de AVCC
 } ADCconfig;
 
 #ifdef AUTO_CAL
-  COMMON uint8_t pin_combination; // coded Pin-combination  2:1,3:1,1:2,x:x,3:2,1:3,2:3
-  COMMON uint16_t resis680pl; // port output resistance + 680
-  COMMON uint16_t resis680mi; // port output resistance + 680
-  COMMON uint16_t pin_rmi;  // port output resistance to GND side, 0.1 Ohm units
-  COMMON uint16_t pin_rpl;  // port output resistance to VCC side, 0.1 Ohm units
+  COMMON uint8_t pin_combination;   // Combinación codificada de pines 2:1, 3:1, 1:2, x:x, 3:2, 1:3, 2:3
+  COMMON uint16_t resis680pl;       // Resistencia de salida del puerto + 680
+  COMMON uint16_t resis680mi;       // Resistencia de salida del puerto + 680
+  COMMON uint16_t pin_rmi;          // Resistencia de salida del puerto hacia GND en unidades de 0.1 Ohm
+  COMMON uint16_t pin_rpl;          // Resistencia de salida del puerto hacia VCC en unidades de 0.1 Ohm
 #endif
 
 #if POWER_OFF+0 > 1
-  COMMON unsigned int display_time; // display time of measurement in ms units
+  COMMON unsigned int display_time; // Tiempo de visualización de la medición en unidades de ms
 #endif
 
 /* -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- */
 
-// definitions of parts
+// Definiciones de partes
 #define PART_NONE 0
 #define PART_DIODE 1
 #define PART_TRANSISTOR 2
@@ -1176,7 +1105,7 @@ COMMON struct ADCconfig_t {
 #define PART_CAPACITOR 7
 #define PART_CELL 8
 
-// special definition for different parts 
+// Definiciones especiales para diferentes partes 
 // FETs
 #define PART_MODE_N_E_MOS 2
 #define PART_MODE_P_E_MOS 3
@@ -1185,13 +1114,13 @@ COMMON struct ADCconfig_t {
 #define PART_MODE_N_JFET 6
 #define PART_MODE_P_JFET 7
 
-// Bipolar
+// Bipolares
 #define PART_MODE_NPN 1
 #define PART_MODE_PNP 2
 
 /* -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- */
 
-// wait functions
+// Funciones de espera
 #define  wait5s()    delay(5000)
 #define  wait4s()    delay(4000)
 #define  wait3s()    delay(3000)
@@ -1230,34 +1159,34 @@ COMMON struct ADCconfig_t {
 
 /* -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- */
 
-// Interfacing of a HD44780 compatible LCD with 4-Bit-Interface mode
+// Interfaz de un LCD compatible con HD44780 en modo de 4 bits
 
-// LCD-commands
+// Comandos LCD
 #define CMD_ClearDisplay         0x01
 #define CMD_ReturnHome           0x02
 #define CMD_SetEntryMode         0x04
 #define CMD_SetDisplayAndCursor  0x08
 #define CMD_SetIFOptions         0x20
-#define CMD_SetCGRAMAddress      0x40    // for Custom character
-#define CMD_SetDDRAMAddress      0x80    // set Cursor 
+#define CMD_SetCGRAMAddress      0x40    // para carácter personalizado
+#define CMD_SetDDRAMAddress      0x80    // establecer cursor 
 
-#define CMD1_SetBias             0x10  // set Bias (instruction table 1, DOGM)
-#define CMD1_PowerControl        0x50  // Power Control, set Contrast C5:C4 (instruction table 1, DOGM)
-#define CMD1_FollowerControl     0x60  // Follower Control, amplified ratio (instruction table 1, DOGM)
-#define CMD1_SetContrast         0x70  // set Contrast C3:C0 (instruction table 1, DOGM)
+#define CMD1_SetBias             0x10  // establecer Bias (tabla de instrucciones 1, DOGM)
+#define CMD1_PowerControl        0x50  // Control de Energía, establecer Contraste C5:C4 (tabla de instrucciones 1, DOGM)
+#define CMD1_FollowerControl     0x60  // Control de Seguidor, ratio amplificado (tabla de instrucciones 1, DOGM)
+#define CMD1_SetContrast         0x70  // establecer Contraste C3:C0 (tabla de instrucciones 1, DOGM)
 
-// Makros for LCD
-#define lcd_line1() lcd_set_cursor(0,0)  // move to beginning of 1 row
-#define lcd_line2() lcd_set_cursor(1,0)  // move to beginning of 2 row
-#define lcd_line3() lcd_set_cursor(2,0)  // move to beginning of 3 row
-#define lcd_line4() lcd_set_cursor(3,0)  // move to beginning of 4 row
+// Macros para LCD
+#define lcd_line1() lcd_set_cursor(0,0)  // mover al inicio de la fila 1
+#define lcd_line2() lcd_set_cursor(1,0)  // mover al inicio de la fila 2
+#define lcd_line3() lcd_set_cursor(2,0)  // mover al inicio de la fila 3
+#define lcd_line4() lcd_set_cursor(3,0)  // mover al inicio de la fila 4
 
 #define uart_newline() Serial.println()
 
 /* -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- */
 
 #ifndef INHIBIT_SLEEP_MODE
-  // prepare sleep mode
+  // preparar modo de suspensión
   EMPTY_INTERRUPT(TIMER2_COMPA_vect);
   EMPTY_INTERRUPT(ADC_vect);
 #endif
@@ -1282,10 +1211,10 @@ byte TestKeyPin = 17;  // A3
 
 #ifdef OLED096
   #ifdef OLED_I2C
-   #define SCREEN_WIDTH 128 // OLED display width, in pixels
-#define SCREEN_HEIGHT 64 // OLED display height, in pixels 
+    #define SCREEN_WIDTH 128 // ancho de pantalla OLED, en píxeles
+    #define SCREEN_HEIGHT 64 // altura de pantalla OLED, en píxeles 
     #define OLED_RESET 7
-  Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+    Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
    // Adafruit_SSD1306 display(OLED_RESET);
   #else
     #define OLED_CLK   7   // D0
@@ -1297,7 +1226,7 @@ byte TestKeyPin = 17;  // A3
   #endif
 #endif
 
-// begin of transistortester program
+// inicio del programa tester de transistores
 void setup()
 {
   Serial.begin(9600);
@@ -1311,16 +1240,16 @@ void setup()
       lcd.begin(16,2);
     #endif
 
-    lcd_pgm_custom_char(LCD_CHAR_DIODE1, DiodeIcon1);  // Custom-Character Diode symbol >|
-    lcd_pgm_custom_char(LCD_CHAR_DIODE2, DiodeIcon2);  // Custom-Character Diode symbol |<
-    lcd_pgm_custom_char(LCD_CHAR_CAP,    CapIcon);     // Custom-Character Capacitor symbol ||
-    lcd_pgm_custom_char(LCD_CHAR_RESIS1, ResIcon1);    // Custom-Character Resistor symbol [
-    lcd_pgm_custom_char(LCD_CHAR_RESIS2, ResIcon2);    // Custom-Character Resistor symbol ]
-    lcd_pgm_custom_char(LCD_CHAR_OMEGA,  OmegaIcon);   // load Omega as Custom-Character
-    lcd_pgm_custom_char(LCD_CHAR_U,      MicroIcon);   // load Micro as Custom-Character
+    lcd_pgm_custom_char(LCD_CHAR_DIODE1, DiodeIcon1);  // Carácter personalizado símbolo de Diodo >|
+    lcd_pgm_custom_char(LCD_CHAR_DIODE2, DiodeIcon2);  // Carácter personalizado símbolo de Diodo |<
+    lcd_pgm_custom_char(LCD_CHAR_CAP,    CapIcon);     // Carácter personalizado símbolo de Capacitor ||
+    lcd_pgm_custom_char(LCD_CHAR_RESIS1, ResIcon1);    // Carácter personalizado símbolo de Resistencia [
+    lcd_pgm_custom_char(LCD_CHAR_RESIS2, ResIcon2);    // Carácter personalizado símbolo de Resistencia ]
+    lcd_pgm_custom_char(LCD_CHAR_OMEGA,  OmegaIcon);   // cargar Omega como carácter personalizado
+    lcd_pgm_custom_char(LCD_CHAR_U,      MicroIcon);   // cargar Micro como carácter personalizado
     lcd.home();
   
-    lcd_string("Transistor Tester");
+    lcd_string("Super Tester!");
     lcd_set_cursor(1, 0);
     lcd_string(" :D ");
   #endif
@@ -1360,12 +1289,12 @@ void setup()
   //ON_PORT = 0;
 
 /*
-  // switch on
-  ON_DDR = (1<<ON_PIN);     // switch to output
+  // encender
+  ON_DDR = (1<<ON_PIN);     // configurar como salida
   #ifdef PULLUP_DISABLE
-    ON_PORT = (1<<ON_PIN);    // switch power on 
+    ON_PORT = (1<<ON_PIN);    // encender energía 
   #else
-    ON_PORT = (1<<ON_PIN)|(1<<RST_PIN);   // switch power on , enable internal Pullup for Start-Pin
+    ON_PORT = (1<<ON_PIN)|(1<<RST_PIN);   // encender energía, habilitar pull-up interno para Pin de Inicio
   #endif
 */
 
@@ -1380,14 +1309,14 @@ void setup()
   #endif
 
 /*
-  tmp = (WDRF_HOME & (1<<WDRF));  // save Watch Dog Flag
-  WDRF_HOME &= ~(1<<WDRF);    // reset Watch Dog flag
-  wdt_disable();      // disable Watch Dog
+  tmp = (WDRF_HOME & (1<<WDRF));  // guardar la flag del Watchdog
+  WDRF_HOME &= ~(1<<WDRF);    // reiniciar la flag del Watchdog
+  wdt_disable();      // deshabilitar Watchdog
 */
 
 /*
   #ifndef INHIBIT_SLEEP_MODE
-    // switch off unused Parts
+    // apagar partes no usadas
     PRR = (1<<PRTWI) | (1<<PRTIM0) | (1<<PRSPI) | (1<<PRUSART0);
     DIDR0 = (1<<ADC5D) | (1<<ADC4D) | (1<<ADC3D); 
     TCCR2A = (0<<WGM21) | (0<<WGM20);     // Counter 2 normal mode
@@ -1409,47 +1338,46 @@ void setup()
       #define T2_PERIOD (1024 / (F_CPU / 1000000UL)); // set to 128 or 64 us 
     #endif 
 
-    sei();  // enable interrupts
-  #endif
+    sei();  // habilitar interrupciones
+    #endif
 */
 
-  #define T2_PERIOD (1024 / (F_CPU / 1000000UL)); // set to 128 or 64 us 
+#define T2_PERIOD (1024 / (F_CPU / 1000000UL)); // configurar a 128 o 64 us
   
   //ADC_PORT = TXD_VAL;
   //ADC_DDR = TXD_MSK;
 
   if(tmp) { 
-    // check if Watchdog-Event 
-    // this happens, if the Watchdog is not reset for 2s
-    // can happen, if any loop in the Program doen't finish.
-    lcd_line1();
-    lcd_fix_string(TestTimedOut); // Output Timeout
-    wait_about3s();     // wait for 3 s
-    //ON_PORT = 0;      // shut off!
-    //ON_DDR = (1<<ON_PIN);   // switch to GND
-    //return;
-  }
+  // verificar si hubo evento de Watchdog. Esto ocurre si el Watchdog no se reinicia durante 2s.
+  // Puede suceder si cualquier bucle en el programa no termina.
+  lcd_line1();
+  lcd_fix_string(TestTimedOut); // Mostrar Timeout
+  wait_about3s();     // esperar 3 s
+  //ON_PORT = 0;      // apagar!
+  //ON_DDR = (1<<ON_PIN);   // configurar a GND
+  //return;
+}
 
   #ifdef PULLUP_DISABLE
     #ifdef __AVR_ATmega8__
-      SFIOR = (1<<PUD);   // disable Pull-Up Resistors mega8
-    #else
-      MCUCR = (1<<PUD);   // disable Pull-Up Resistors mega168 family
+    SFIOR = (1<<PUD);   // deshabilitar resistencias pull-up mega8
+  #else
+    MCUCR = (1<<PUD);   // deshabilitar resistencias pull-up familia mega168
     #endif
   #endif
 
-  //DIDR0 = 0x3f;   // disable all Input register of ADC
+//DIDR0 = 0x3f;   // deshabilitar todos los registros de entrada del ADC
 
 /*
   #if POWER_OFF+0 > 1
-    // tester display time selection
-    display_time = OFF_WAIT_TIME;   // LONG_WAIT_TIME for single mode, else SHORT_WAIT_TIME
+    // selección de tiempo de visualización del tester
+    display_time = OFF_WAIT_TIME;   // LONG_WAIT_TIME para modo único, de lo contrario SHORT_WAIT_TIME
     if (!(ON_PIN_REG & (1<<RST_PIN))) {
-      // if power button is pressed ...
-      wait_about300ms();      // wait to catch a long key press
+      // si el botón de energía está presionado ...
+      wait_about300ms();      // esperar para detectar una pulsación larga
       if (!(ON_PIN_REG & (1<<RST_PIN))) {
-        // check if power button is still pressed
-        display_time = LONG_WAIT_TIME;    // ... set long time display anyway
+        // verificar si el botón de energía aún está presionado
+        display_time = LONG_WAIT_TIME;    // ... establecer tiempo largo de visualización de todos modos
       }
     }
   #else
@@ -1465,8 +1393,8 @@ void setup()
 
 void loop()
 {
-  // Entry: if start key is pressed before shut down
-start:
+  // Entrada: si la tecla de inicio se presiona antes de apagar
+  start:
 
   #ifdef NOK5110
     lcd.display();
@@ -1488,82 +1416,82 @@ start:
   lcd_clear();
   delay(100);
 
-  PartFound = PART_NONE;  // no part found
-  NumOfDiodes = 0;    // Number of diodes = 0
+  PartFound = PART_NONE;  // no se encontró ninguna parte
+  NumOfDiodes = 0;        // Número de diodos = 0
   PartReady = 0;
   PartMode = 0;
-  WithReference = 0;    // no precision reference voltage
-  ADC_DDR = TXD_MSK;    // activate Software-UART 
-  ResistorsFound = 0;   // no resistors found
+  WithReference = 0;      // sin voltaje de referencia de precisión
+  ADC_DDR = TXD_MSK;      // activar UART de software 
+  ResistorsFound = 0;     // no se encontraron resistencias
   cap.ca = 0;
   cap.cb = 0;
 
   #ifdef WITH_UART
-    uart_newline();   // start of new measurement
+    uart_newline();       // inicio de nueva medición
   #endif
 
   ADCconfig.RefFlag = 0;
-  Calibrate_UR();   // get Ref Voltages and Pin resistance
-  lcd_line1();    // 1 row
+  Calibrate_UR();         // obtener voltajes de referencia y resistencia de pin
+  lcd_line1();            // fila 1
   
-  ADCconfig.U_Bandgap = ADC_internal_reference;  // set internal reference voltage for ADC
+  ADCconfig.U_Bandgap = ADC_internal_reference;  // establecer voltaje de referencia interno para ADC
 
   #ifdef BAT_CHECK
-    // Battery check is selected
-    ReadADC(TPBAT);     // Dummy-Readout
-    trans.uBE[0] = W5msReadADC(TPBAT);  // with 5V reference
-    lcd_fix_string(Bat_str);    // output: "Bat. "
+    // Verificación de batería está seleccionada
+    ReadADC(TPBAT);     // Lectura de prueba
+    trans.uBE[0] = W5msReadADC(TPBAT);  // con referencia de 5V
+    lcd_fix_string(Bat_str);    // salida: "Bat. "
 
-    #ifdef BAT_OUT
-      // display Battery voltage
-      // The divisor to get the voltage in 0.01V units is ((10*33)/133) witch is about 2.4812
-      // A good result can be get with multiply by 4 and divide by 10 (about 0.75%).
-      //cap.cval = (trans.uBE[0]*4)/10+((BAT_OUT+5)/10); // usually output only 2 digits
-      //DisplayValue(cap.cval,-2,'V',2);    // Display 2 Digits of this 10mV units
-      cap.cval = (trans.uBE[0]*4)+BAT_OUT;    // usually output only 2 digits
-      DisplayValue(cap.cval,-3,'V',2);      // Display 2 Digits of this 10mV units
+ #ifdef BAT_OUT
+      // Mostrar voltaje de batería
+      // El divisor para obtener el voltaje en unidades de 0.01V es ((10*33)/133) que es aproximadamente 2.4812
+      // Un buen resultado se puede obtener multiplicando por 4 y dividiendo por 10 (aproximadamente 0.75%).
+      //cap.cval = (trans.uBE[0]*4)/10+((BAT_OUT+5)/10); // usualmente solo se muestran 2 dígitos
+      //DisplayValue(cap.cval,-2,'V',2);    // Mostrar 2 Dígitos de estas unidades de 10mV
+      cap.cval = (trans.uBE[0]*4)+BAT_OUT;    // usualmente solo se muestran 2 dígitos
+      DisplayValue(cap.cval,-3,'V',2);      // Mostrar 2 Dígitos de estas unidades de 10mV
       lcd_space();
     #endif
 
     #if (BAT_POOR > 12000)
-      #warning "Battery POOR level is set very high!"
+      #warning "¡El nivel POOR de la batería está configurado muy alto!"
     #endif
     #if (BAT_POOR < 2500)
-      #warning "Battery POOR level is set very low!"
+      #warning "¡El nivel POOR de la batería está configurado muy bajo!"
     #endif
 
     #if (BAT_POOR > 5300)
-      // use .8 V difference to Warn-Level
-      #define WARN_LEVEL (((unsigned long)(BAT_POOR+800)*(unsigned long)33)/133)
-    #elif (BAT_POOR > 3249)
-      // less than 5.4 V only .4V difference to Warn-Level
-      #define WARN_LEVEL (((unsigned long)(BAT_POOR+400)*(unsigned long)33)/133)
-    #elif (BAT_POOR > 1299)
-      // less than 2.9 V only .2V difference to Warn-Level
-      #define WARN_LEVEL (((unsigned long)(BAT_POOR+200)*(unsigned long)33)/133)
-    #else
-      // less than 1.3 V only .1V difference to Warn-Level
-      #define WARN_LEVEL (((unsigned long)(BAT_POOR+100)*(unsigned long)33)/133)
-    #endif
+  // usar una diferencia de 0.8 V respecto al nivel de advertencia
+  #define WARN_LEVEL (((unsigned long)(BAT_POOR+800)*(unsigned long)33)/133)
+#elif (BAT_POOR > 3249)
+  // menos de 5.4 V, solo 0.4V de diferencia al nivel de advertencia
+  #define WARN_LEVEL (((unsigned long)(BAT_POOR+400)*(unsigned long)33)/133)
+#elif (BAT_POOR > 1299)
+  // menos de 2.9 V, solo 0.2V de diferencia al nivel de advertencia
+  #define WARN_LEVEL (((unsigned long)(BAT_POOR+200)*(unsigned long)33)/133)
+#else
+  // menos de 1.3 V, solo 0.1V de diferencia al nivel de advertencia
+  #define WARN_LEVEL (((unsigned long)(BAT_POOR+100)*(unsigned long)33)/133)
+#endif
 
-    #define POOR_LEVEL (((unsigned long)(BAT_POOR)*(unsigned long)33)/133)
+#define POOR_LEVEL (((unsigned long)(BAT_POOR)*(unsigned long)33)/133)
 
-    // check the battery voltage
-    if (trans.uBE[0] <  WARN_LEVEL) {
+// verificar el voltaje de la batería
+if (trans.uBE[0] < WARN_LEVEL) {
 
-      // Vcc < 7,3V; show Warning 
-      if(trans.uBE[0] < POOR_LEVEL) { 
-        // Vcc <6,3V; no proper operation is possible
-        lcd_fix_string(BatEmpty); // Battery empty!
-        wait_about2s();
-        PORTD = 0;      // switch power off
-        return;
-      }
+  // Vcc < 7,3V; mostrar advertencia
+  if(trans.uBE[0] < POOR_LEVEL) { 
+    // Vcc <6,3V; no es posible una operación correcta
+    lcd_fix_string(BatEmpty); // ¡Batería vacía!
+    wait_about2s();
+    PORTD = 0;      // switch de power off
+    return;
+  }
 
-      lcd_fix_string(BatWeak);    // Battery weak
-    } else {                            // Battery-voltage OK
-      lcd_fix_string(OK_str);     // "OK"
-    }
+  lcd_fix_string(BatWeak);    // Batería débil
+} else {                            // Voltaje de batería OK
+  lcd_fix_string(OK_str);     // "OK"
+}
 
   #else
     lcd_fix2_string(VERSION_str); // if no Battery check, Version .. in row 1
